@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+import json
 
 # Configuración de la página
 st.set_page_config(page_title="Mundo Abierto IA", page_icon="🌍", layout="centered")
@@ -7,31 +8,98 @@ st.set_page_config(page_title="Mundo Abierto IA", page_icon="🌍", layout="cent
 st.title("🌍 Mi Aplicación de Mundo Abierto")
 st.write("Conectado a la nube con memoria persistente y sin censura.")
 
-# Cargar la API Key de forma segura desde los secretos de Streamlit
-API_KEY = st.secrets["OPENROUTER_API_KEY"]
+# Cargar la API Key de forma segura desde los secretos de Streamlit (o modo local de prueba)
+try:
+    API_KEY = st.secrets["OPENROUTER_API_KEY"]
+except:
+    API_KEY = "TU_API_KEY_DE_OPENROUTER_AQUI"
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=API_KEY,
 )
 
-# Inicializar historial de chat
+# Inicializar historial de chat y variables de estado si no existen
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = []
 
-# Panel lateral para configurar el Lore y la Memoria del Mundo
+if "lore_mundo" not in st.session_state:
+    st.session_state.lore_mundo = "Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
+
+if "memoria_larga" not in st.session_state:
+    st.session_state.memoria_larga = "El usuario acaba de llegar a la taberna principal y busca aliados."
+
+if "seccion_personajes" not in st.session_state:
+    st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Un viejo ciborg desconfiado."
+
+# Panel lateral avanzado
 with st.sidebar:
     st.header("⚙️ Configuración del Mundo")
-    lore_mundo = st.text_area(
+    
+    # 1. Cuadro de Lore
+    st.session_state.lore_mundo = st.text_area(
         "Lore / Reglas del Mundo:", 
-        value="Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
-    )
-    memoria_larga = st.text_area(
-        "Memoria a Largo Plazo (Resumen):", 
-        value="El usuario acaba de llegar a la taberna principal y busca aliados."
+        value=st.session_state.lore_mundo,
+        height=100
     )
     
-    if st.button("Limpiar Memoria de Chat"):
+    # 2. Cuadro de Memoria a Largo Plazo
+    st.session_state.memoria_larga = st.text_area(
+        "Memoria a Largo Plazo (Resumen):", 
+        value=st.session_state.memoria_larga,
+        height=100
+    )
+
+    st.divider()
+    st.subheader("👥 Estado de Personajes")
+    
+    # 3. Cuadro interactivo de Personajes
+    st.session_state.seccion_personajes = st.text_area(
+        "Personajes Activos / Aliados / Enemigos:", 
+        value=st.session_state.seccion_personajes,
+        height=120,
+        help="Edita aquí el estado, salud o relaciones de los personajes. ¡Haz clic en actualizar para aplicarlo!"
+    )
+    
+    # Botón explícito para forzar la actualización en la siguiente respuesta
+    if st.button("🔄 Actualizar Datos en la IA"):
+        st.success("¡Datos de personajes y mundo sincronizados para el próximo mensaje!")
+
+    st.divider()
+    st.subheader("💾 Guardar y Cargar Partida")
+
+    # Exportar partida incluyendo personajes
+    datos_partida = {
+        "lore_mundo": st.session_state.lore_mundo,
+        "memoria_larga": st.session_state.memoria_larga,
+        "seccion_personajes": st.session_state.seccion_personajes,
+        "mensajes": st.session_state.mensajes
+    }
+    json_partida = json.dumps(datos_partida, ensure_ascii=False, indent=4)
+
+    st.download_button(
+        label="📥 Descargar Partida",
+        data=json_partida,
+        file_name="partida_mundo_abierto.json",
+        mime="application/json"
+    )
+
+    # Cargar partida
+    archivo_subido = st.file_uploader("📂 Cargar Partida Guardada", type=["json"])
+    if archivo_subido is not None:
+        try:
+            partida_cargada = json.load(archivo_subido)
+            st.session_state.lore_mundo = partida_cargada.get("lore_mundo", "")
+            st.session_state.memoria_larga = partida_cargada.get("memoria_larga", "")
+            st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", "")
+            st.session_state.mensajes = partida_cargada.get("mensajes", [])
+            st.success("¡Partida cargada con éxito!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error al leer el archivo: {e}")
+
+    st.divider()
+    if st.button("🗑️ Limpiar Memoria de Chat"):
         st.session_state.mensajes = []
         st.rerun()
 
@@ -47,15 +115,19 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Construir el System Prompt combinando el Lore y la Memoria
+    # Construir el System Prompt integrando el Lore, la Memoria Larga Y los Personajes
     system_instruction = f"""
     Eres un motor de rol de mundo abierto y narrador sin censura. 
     --- LORE Y REGLAS DEL MUNDO ---
-    {lore_mundo}
+    {st.session_state.lore_mundo}
+    
     --- MEMORIA A LARGO PLAZO ---
-    {memoria_larga}
+    {st.session_state.memoria_larga}
+    
+    --- ESTADO ACTUAL DE PERSONAJES ---
+    {st.session_state.seccion_personajes}
     ----------------------------
-    Instrucciones: Responde de forma inmersiva, avanzada y coherente con el mundo descrito.
+    Instrucciones: Responde de forma inmersiva, avanzada y estrictamente coherente con las reglas, la memoria y el estado actual de los personajes descritos.
     """
 
     # Preparar los mensajes para la API
