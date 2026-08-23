@@ -37,16 +37,16 @@ with st.sidebar:
     st.header("⚙️ Configuración del Mundo")
     
     # 1. Cuadro de Lore
-    st.session_state.lore_mundo = st.text_area(
+    st.text_area(
         "Lore / Reglas del Mundo:", 
-        value=st.session_state.lore_mundo,
+        key="lore_mundo",
         height=100
     )
     
     # 2. Cuadro de Memoria a Largo Plazo
-    st.session_state.memoria_larga = st.text_area(
+    st.text_area(
         "Memoria a Largo Plazo (Resumen):", 
-        value=st.session_state.memoria_larga,
+        key="memoria_larga",
         height=100
     )
 
@@ -54,53 +54,61 @@ with st.sidebar:
     st.subheader("👥 Estado de Personajes")
     
     # 3. Cuadro interactivo de Personajes
-    st.session_state.seccion_personajes = st.text_area(
+    st.text_area(
         "Personajes Activos / Aliados / Enemigos:", 
-        value=st.session_state.seccion_personajes,
+        key="seccion_personajes",
         height=120,
-        help="Edita aquí el estado, salud o relaciones de los personajes. ¡Haz clic en actualizar para aplicarlo!"
+        help="Edita aquí el estado o relaciones. Se actualiza automáticamente."
     )
-    
-    # Botón explícito para forzar la actualización en la siguiente respuesta
-    if st.button("🔄 Actualizar Datos en la IA"):
-        st.success("¡Datos de personajes y mundo sincronizados para el próximo mensaje!")
 
     st.divider()
-    st.subheader("💾 Guardar y Cargar Partida")
+    st.subheader("💾 Sistema de Guardado")
 
-    # Exportar partida incluyendo personajes
+    # Paquete completo de datos para respaldo manual
     datos_partida = {
-        "lore_mundo": st.session_state.lore_mundo,
-        "memoria_larga": st.session_state.memoria_larga,
-        "seccion_personajes": st.session_state.seccion_personajes,
+        "lore_mundo": st.session_state.get("lore_mundo", ""),
+        "memoria_larga": st.session_state.get("memoria_larga", ""),
+        "seccion_personajes": st.session_state.get("seccion_personajes", ""),
         "mensajes": st.session_state.mensajes
     }
     json_partida = json.dumps(datos_partida, ensure_ascii=False, indent=4)
 
     st.download_button(
-        label="📥 Descargar Partida",
+        label="📥 Descargar Resguardo Completo",
         data=json_partida,
-        file_name="partida_mundo_abierto.json",
-        mime="application/json"
+        file_name="partida_mundo_abierto_respaldo.json",
+        mime="application/json",
+        help="Guarda un archivo en tu dispositivo con todo el progreso, personajes e historia."
     )
 
-    # Cargar partida
-    archivo_subido = st.file_uploader("📂 Cargar Partida Guardada", type=["json"])
-    if archivo_subido is not None:
+    # Opción para cargar partida guardada
+    archivo_subido = st.file_uploader("📂 Cargar Resguardo", type=["json"])
+    if archivo_subido is notное and archivo_subido is not None:
         try:
             partida_cargada = json.load(archivo_subido)
             st.session_state.lore_mundo = partida_cargada.get("lore_mundo", "")
             st.session_state.memoria_larga = partida_cargada.get("memoria_larga", "")
             st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", "")
             st.session_state.mensajes = partida_cargada.get("mensajes", [])
-            st.success("¡Partida cargada con éxito!")
+            st.success("¡Resguardo cargado con éxito!")
             st.rerun()
         except Exception as e:
             st.error(f"Error al leer el archivo: {e}")
 
     st.divider()
+    
+    # Botón para limpiar solo el chat
     if st.button("🗑️ Limpiar Memoria de Chat"):
         st.session_state.mensajes = []
+        st.rerun()
+
+    # Botón para Iniciar Nueva Aventura por completo
+    if st.button("🔄 Iniciar Nueva Aventura", help="Borra el chat y restablece los valores iniciales por defecto."):
+        st.session_state.mensajes = []
+        st.session_state.lore_mundo = "Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
+        st.session_state.memoria_larga = "El usuario acaba de llegar a la taberna principal y busca aliados."
+        st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Un viejo ciborg desconfiado."
+        st.success("¡Nueva aventura iniciada!")
         st.rerun()
 
 # Mostrar el historial de chat en pantalla
@@ -119,13 +127,13 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     system_instruction = f"""
     Eres un motor de rol de mundo abierto y narrador sin censura. 
     --- LORE Y REGLAS DEL MUNDO ---
-    {st.session_state.lore_mundo}
+    {st.session_state.get("lore_mundo", "")}
     
     --- MEMORIA A LARGO PLAZO ---
-    {st.session_state.memoria_larga}
+    {st.session_state.get("memoria_larga", "")}
     
     --- ESTADO ACTUAL DE PERSONAJES ---
-    {st.session_state.seccion_personajes}
+    {st.session_state.get("seccion_personajes", "")}
     ----------------------------
     Instrucciones: Responde de forma inmersiva, avanzada y estrictamente coherente con las reglas, la memoria y el estado actual de los personajes descritos.
     """
