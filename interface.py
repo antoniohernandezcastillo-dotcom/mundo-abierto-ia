@@ -83,7 +83,7 @@ with st.sidebar:
 
     # Opción para cargar partida guardada
     archivo_subido = st.file_uploader("📂 Cargar Resguardo", type=["json"])
-    if archivo_subido is notное and archivo_subido is not None:
+    if archivo_subido is not None and archivo_subido is not None:
         try:
             partida_cargada = json.load(archivo_subido)
             st.session_state.lore_mundo = partida_cargada.get("lore_mundo", "")
