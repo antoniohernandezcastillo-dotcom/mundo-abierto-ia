@@ -5,7 +5,7 @@ import json
 # Configuración de la página
 st.set_page_config(page_title="Mundo Abierto IA", page_icon="🌍", layout="centered")
 
-st.title("🌍 Mi Aplicación de Mundo Abierto")
+st.title("🌍 Mi Mundo")
 st.write("Conectado a la nube con memoria persistente y sin censura.")
 
 # Cargar la API Key de forma segura desde los secretos de Streamlit (o modo local de prueba)
