@@ -38,19 +38,21 @@ with st.sidebar:
     
     st.subheader("📂 Cargar o Reiniciar Partida")
     
-    # 2. CARGAR ARCHIVO ANTES DE DIBUJAR LOS WIDGETS (Soluciona el error de Streamlit)
-    archivo_subido = st.file_uploader("Cargar Resguardo JSON", type=["json"])
+    # 2. CARGAR ARCHIVO CON BOTÓN DE CONFIRMACIÓN EXPLÍCITO
+    archivo_subido = st.file_uploader("Selecciona tu resguardo JSON", type=["json"])
+    
     if archivo_subido is not None:
-        try:
-            partida_cargada = json.load(archivo_subido)
-            st.session_state.lore_mundo = partida_cargada.get("lore_mundo", st.session_state.lore_mundo)
-            st.session_state.memoria_larga = partida_cargada.get("memoria_larga", st.session_state.memoria_larga)
-            st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", st.session_state.seccion_personajes)
-            st.session_state.mensajes = partida_cargada.get("mensajes", [])
-            st.success("¡Resguardo cargado con éxito!")
-            st.rerun()
-        except Exception as e:
-            st.error(f"Error al leer el archivo: {e}")
+        if st.button("📂 Procesar y Cargar Partida"):
+            try:
+                partida_cargada = json.load(archivo_subido)
+                st.session_state.lore_mundo = partida_cargada.get("lore_mundo", st.session_state.lore_mundo)
+                st.session_state.memoria_larga = partida_cargada.get("memoria_larga", st.session_state.memoria_larga)
+                st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", st.session_state.seccion_personajes)
+                st.session_state.mensajes = partida_cargada.get("mensajes", [])
+                st.success("¡Resguardo cargado con éxito!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al leer el archivo: {e}")
 
     # Botón para Iniciar Nueva Aventura
     if st.button("🔄 Iniciar Nueva Aventura", help="Borra el chat y restablece los valores iniciales por defecto."):
@@ -63,7 +65,7 @@ with st.sidebar:
 
     st.divider()
     
-    # 3. CUADROS DE TEXTO (Se dibujan después de que el archivo ya pudo actualizar el estado)
+    # 3. CUADROS DE TEXTO
     st.text_area(
         "Lore / Reglas del Mundo:", 
         key="lore_mundo",
@@ -89,7 +91,6 @@ with st.sidebar:
     st.divider()
     st.subheader("💾 Guardar Partida")
 
-    # Paquete completo de datos para respaldo manual
     datos_partida = {
         "lore_mundo": st.session_state.get("lore_mundo", ""),
         "memoria_larga": st.session_state.get("memoria_larga", ""),
@@ -118,12 +119,10 @@ for mensaje in st.session_state.mensajes:
 
 # Entrada de texto del usuario
 if prompt := st.chat_input("Escribe tu acción o mensaje..."):
-    # Guardar mensaje del usuario
     st.session_state.mensajes.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Construir el System Prompt integrando el Lore, la Memoria Larga Y los Personajes
     system_instruction = f"""
     Eres un motor de rol de mundo abierto y narrador sin censura. 
     --- LORE Y REGLAS DEL MUNDO ---
@@ -138,12 +137,10 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     Instrucciones: Responde de forma inmersiva, avanzada y estrictamente coherente con las reglas, la memoria y el estado actual de los personajes descritos.
     """
 
-    # Preparar los mensajes para la API
     mensajes_para_ia = [{"role": "system", "content": system_instruction}]
     for m in st.session_state.mensajes:
         mensajes_para_ia.append({"role": m["role"], "content": m["content"]})
 
-    # Llamar a la API en la nube
     with st.chat_message("assistant"):
         with st.spinner("La IA está pensando en el mundo..."):
             try:
@@ -154,9 +151,6 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
                 )
                 respuesta_ia = response.choices[0].message.content
                 st.markdown(respuesta_ia)
-                
-                # Guardar la respuesta en el historial
                 st.session_state.mensajes.append({"role": "assistant", "content": respuesta_ia})
-                
             except Exception as e:
                 st.error(f"Ocurrió un error al conectar con la API: {e}")
