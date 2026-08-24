@@ -5,7 +5,7 @@ import json
 # Configuración de la página
 st.set_page_config(page_title="Mundo Abierto IA", page_icon="🌍", layout="centered")
 
-st.title("🌍 Mi Mundo")
+st.title("🌍 Mi Aplicación de Mundo Abierto")
 st.write("Conectado a la nube con memoria persistente y sin censura.")
 
 # Cargar la API Key de forma segura desde los secretos de Streamlit (o modo local de prueba)
@@ -19,7 +19,7 @@ client = OpenAI(
     api_key=API_KEY,
 )
 
-# Inicializar historial de chat y variables de estado si no existen
+# 1. INICIALIZAR VARIABLES DE ESTADO PRIMERO QUE NADA
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = []
 
@@ -36,33 +36,58 @@ if "seccion_personajes" not in st.session_state:
 with st.sidebar:
     st.header("⚙️ Configuración del Mundo")
     
-    # 1. Cuadro de Lore
+    st.subheader("📂 Cargar o Reiniciar Partida")
+    
+    # 2. CARGAR ARCHIVO ANTES DE DIBUJAR LOS WIDGETS (Soluciona el error de Streamlit)
+    archivo_subido = st.file_uploader("Cargar Resguardo JSON", type=["json"])
+    if archivo_subido is not None:
+        try:
+            partida_cargada = json.load(archivo_subido)
+            st.session_state.lore_mundo = partida_cargada.get("lore_mundo", st.session_state.lore_mundo)
+            st.session_state.memoria_larga = partida_cargada.get("memoria_larga", st.session_state.memoria_larga)
+            st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", st.session_state.seccion_personajes)
+            st.session_state.mensajes = partida_cargada.get("mensajes", [])
+            st.success("¡Resguardo cargado con éxito!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error al leer el archivo: {e}")
+
+    # Botón para Iniciar Nueva Aventura
+    if st.button("🔄 Iniciar Nueva Aventura", help="Borra el chat y restablece los valores iniciales por defecto."):
+        st.session_state.mensajes = []
+        st.session_state.lore_mundo = "Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
+        st.session_state.memoria_larga = "El usuario acaba de llegar a la taberna principal y busca aliados."
+        st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Un viejo ciborg desconfiado."
+        st.success("¡Nueva aventura iniciada!")
+        st.rerun()
+
+    st.divider()
+    
+    # 3. CUADROS DE TEXTO (Se dibujan después de que el archivo ya pudo actualizar el estado)
     st.text_area(
         "Lore / Reglas del Mundo:", 
         key="lore_mundo",
         height=100
     )
     
-    # 2. Cuadro de Memoria a Largo Plazo
     st.text_area(
         "Memoria a Largo Plazo (Resumen):", 
         key="memoria_larga",
         height=100
     )
 
-    st.divider()
     st.subheader("👥 Estado de Personajes")
-    
-    # 3. Cuadro interactivo de Personajes
     st.text_area(
         "Personajes Activos / Aliados / Enemigos:", 
         key="seccion_personajes",
-        height=120,
-        help="Edita aquí el estado o relaciones. Se actualiza automáticamente."
+        height=120
     )
+    
+    if st.button("🔄 Actualizar Datos en la IA"):
+        st.success("¡Datos sincronizados para el próximo mensaje!")
 
     st.divider()
-    st.subheader("💾 Sistema de Guardado")
+    st.subheader("💾 Guardar Partida")
 
     # Paquete completo de datos para respaldo manual
     datos_partida = {
@@ -81,34 +106,9 @@ with st.sidebar:
         help="Guarda un archivo en tu dispositivo con todo el progreso, personajes e historia."
     )
 
-    # Opción para cargar partida guardada
-    archivo_subido = st.file_uploader("📂 Cargar Resguardo", type=["json"])
-    if archivo_subido is not None and archivo_subido is not None:
-        try:
-            partida_cargada = json.load(archivo_subido)
-            st.session_state.lore_mundo = partida_cargada.get("lore_mundo", "")
-            st.session_state.memoria_larga = partida_cargada.get("memoria_larga", "")
-            st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", "")
-            st.session_state.mensajes = partida_cargada.get("mensajes", [])
-            st.success("¡Resguardo cargado con éxito!")
-            st.rerun()
-        except Exception as e:
-            st.error(f"Error al leer el archivo: {e}")
-
     st.divider()
-    
-    # Botón para limpiar solo el chat
     if st.button("🗑️ Limpiar Memoria de Chat"):
         st.session_state.mensajes = []
-        st.rerun()
-
-    # Botón para Iniciar Nueva Aventura por completo
-    if st.button("🔄 Iniciar Nueva Aventura", help="Borra el chat y restablece los valores iniciales por defecto."):
-        st.session_state.mensajes = []
-        st.session_state.lore_mundo = "Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
-        st.session_state.memoria_larga = "El usuario acaba de llegar a la taberna principal y busca aliados."
-        st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Un viejo ciborg desconfiado."
-        st.success("¡Nueva aventura iniciada!")
         st.rerun()
 
 # Mostrar el historial de chat en pantalla
