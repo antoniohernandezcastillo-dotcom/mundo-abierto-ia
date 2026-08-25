@@ -161,7 +161,7 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
         with st.spinner("La IA está pensando en el mundo..."):
             try:
                 response = client.chat.completions.create(
-                    model="meta-llama/llama-3-8b-instruct:free",
+                    model="openrouter/free",
                     messages=mensajes_para_ia,
                     temperature=0.8,
                 )
