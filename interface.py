@@ -38,7 +38,6 @@ with st.sidebar:
     
     st.subheader("📂 Cargar o Reiniciar Partida")
     
-    # 2. CARGAR ARCHIVO CON BOTÓN DE CONFIRMACIÓN EXPLÍCITO
     archivo_subido = st.file_uploader("Selecciona tu resguardo JSON", type=["json"])
     
     if archivo_subido is not None:
@@ -54,7 +53,6 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"Error al leer el archivo: {e}")
 
-    # Botón para Iniciar Nueva Aventura
     if st.button("🔄 Iniciar Nueva Aventura", help="Borra el chat y restablece los valores iniciales por defecto."):
         st.session_state.mensajes = []
         st.session_state.lore_mundo = "Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
@@ -65,7 +63,6 @@ with st.sidebar:
 
     st.divider()
     
-    # 3. CUADROS DE TEXTO
     st.text_area(
         "Lore / Reglas del Mundo:", 
         key="lore_mundo",
@@ -109,29 +106,29 @@ with st.sidebar:
 
     st.divider()
     
-    # Botón para deshacer el último turno
-    if st.button("↩️ Deshacer Último Turno", help="Elimina el último intercambio si no te gustó la respuesta."):
-        if len(st.session_state.mensajes) >= 2:
-            st.session_state.mensajes.pop()
-            st.session_state.mensajes.pop()
-            st.success("¡Último turno borrado con éxito!")
-            st.rerun()
-        elif len(st.session_state.mensajes) == 1:
-            st.session_state.mensajes.pop()
-            st.success("¡Mensaje borrado!")
-            st.rerun()
-        else:
-            st.warning("No hay mensajes para borrar.")
-
-    # Botón para limpiar toda la memoria de chat
     if st.button("🗑️ Limpiar Toda la Memoria"):
         st.session_state.mensajes = []
         st.rerun()
 
-# Mostrar el historial de chat en pantalla
-for mensaje in st.session_state.mensajes:
+# Mostrar el historial de chat en pantalla con botón de deshacer en el último turno
+total_mensajes = len(st.session_state.mensajes)
+
+for i, mensaje in enumerate(st.session_state.mensajes):
     with st.chat_message(mensaje["role"]):
         st.markdown(mensaje["content"])
+        
+        # Si es el último mensaje del historial, añadimos un botón discreto justo debajo
+        if i == total_mensajes - 1:
+            if st.button("↩️ Deshacer este turno", key=f"btn_deshacer_{i}"):
+                if total_mensajes >= 2:
+                    st.session_state.mensajes.pop()
+                    st.session_state.mensajes.pop()
+                    st.success("¡Turno deshecho!")
+                    st.rerun()
+                elif total_mensajes == 1:
+                    st.session_state.mensajes.pop()
+                    st.success("¡Mensaje borrado!")
+                    st.rerun()
 
 # Entrada de texto del usuario
 if prompt := st.chat_input("Escribe tu acción o mensaje..."):
@@ -168,5 +165,6 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
                 respuesta_ia = response.choices[0].message.content
                 st.markdown(respuesta_ia)
                 st.session_state.mensajes.append({"role": "assistant", "content": respuesta_ia})
+                st.rerun() # Recargamos para que el botón de deshacer aparezca inmediatamente abajo
             except Exception as e:
                 st.error(f"Ocurrió un error al conectar con la API: {e}")
