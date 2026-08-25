@@ -141,11 +141,12 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     for m in st.session_state.mensajes:
         mensajes_para_ia.append({"role": m["role"], "content": m["content"]})
 
+    # Llamar a la API en la nube usando un modelo gratuito de OpenRouter para evitar el error 402
     with st.chat_message("assistant"):
         with st.spinner("La IA está pensando en el mundo..."):
             try:
                 response = client.chat.completions.create(
-                    model="deepseek/deepseek-chat",
+                    model="deepseek/deepseek-r1:free",
                     messages=mensajes_para_ia,
                     temperature=0.8,
                 )
