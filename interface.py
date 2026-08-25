@@ -108,7 +108,25 @@ with st.sidebar:
     )
 
     st.divider()
-    if st.button("🗑️ Limpiar Memoria de Chat"):
+    
+    # NUEVO: Botón para deshacer el último turno (borra la última respuesta de la IA y tu mensaje)
+    if st.button("↩️ Deshacer Último Turno", help="Elimina el último intercambio si no te gustó la respuesta."):
+        if len(st.session_state.mensajes) >= 2:
+            # Borramos la respuesta de la IA y tu mensaje anterior
+            st.session_state.mensajes.pop()
+            st.session_state.mensajes.pop()
+            st.success("¡Último turno borrado con éxito!")
+            st.rerun()
+        elif len(st.session_state.mensajes) == 1:
+            # Si solo hay un mensaje suelto
+            st.session_state.mensajes.pop()
+            st.success("¡Mensaje borrado!")
+            st.rerun()
+        else:
+            st.warning("No hay mensajes para borrar.")
+
+    # Botón para limpiar toda la memoria de chat
+    if st.button("🗑️ Limpiar Toda la Memoria"):
         st.session_state.mensajes = []
         st.rerun()
 
@@ -141,7 +159,6 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     for m in st.session_state.mensajes:
         mensajes_para_ia.append({"role": m["role"], "content": m["content"]})
 
-    # Llamar a la API en la nube usando un modelo gratuito de OpenRouter para evitar el error 402
     with st.chat_message("assistant"):
         with st.spinner("La IA está pensando en el mundo..."):
             try:
