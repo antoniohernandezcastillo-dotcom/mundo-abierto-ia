@@ -146,7 +146,7 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
         with st.spinner("La IA está pensando en el mundo..."):
             try:
                 response = client.chat.completions.create(
-                    model="deepseek/deepseek-r1:free",
+                    model="google/gemini-2.0-flash-lite-001",
                     messages=mensajes_para_ia,
                     temperature=0.8,
                 )
