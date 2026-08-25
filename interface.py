@@ -109,16 +109,14 @@ with st.sidebar:
 
     st.divider()
     
-    # NUEVO: Botón para deshacer el último turno (borra la última respuesta de la IA y tu mensaje)
+    # Botón para deshacer el último turno
     if st.button("↩️ Deshacer Último Turno", help="Elimina el último intercambio si no te gustó la respuesta."):
         if len(st.session_state.mensajes) >= 2:
-            # Borramos la respuesta de la IA y tu mensaje anterior
             st.session_state.mensajes.pop()
             st.session_state.mensajes.pop()
             st.success("¡Último turno borrado con éxito!")
             st.rerun()
         elif len(st.session_state.mensajes) == 1:
-            # Si solo hay un mensaje suelto
             st.session_state.mensajes.pop()
             st.success("¡Mensaje borrado!")
             st.rerun()
@@ -163,7 +161,7 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
         with st.spinner("La IA está pensando en el mundo..."):
             try:
                 response = client.chat.completions.create(
-                    model="google/gemini-2.0-flash-lite-001",
+                    model="meta-llama/llama-3-8b-instruct:free",
                     messages=mensajes_para_ia,
                     temperature=0.8,
                 )
