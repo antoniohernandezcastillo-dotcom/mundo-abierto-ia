@@ -30,7 +30,7 @@ if "memoria_larga" not in st.session_state:
     st.session_state.memoria_larga = "El usuario acaba de llegar a la taberna principal y busca aliados."
 
 if "seccion_personajes" not in st.session_state:
-    st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Un viejo ciborg desconfiado."
+    st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Anciano ciborg desconfiado."
 
 # Panel lateral avanzado
 with st.sidebar:
@@ -57,13 +57,12 @@ with st.sidebar:
         st.session_state.mensajes = []
         st.session_state.lore_mundo = "Un mundo de fantasía oscura y cyberpunk donde todo está permitido..."
         st.session_state.memoria_larga = "El usuario acaba de llegar a la taberna principal y busca aliados."
-        st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Un viejo ciborg desconfiado."
+        st.session_state.seccion_personajes = "- Antonio H (Protagonista): Viajero novato, buscando aliados.\n- Tabernero: Anciano ciborg desconfiado."
         st.success("¡Nueva aventura iniciada!")
         st.rerun()
 
     st.divider()
     
-    # 3. SECCIÓN DE LORE CON BOTÓN DE ACTUALIZACIÓN PROPIO
     st.text_area(
         "Lore / Reglas del Mundo:", 
         key="lore_mundo",
@@ -74,7 +73,6 @@ with st.sidebar:
 
     st.divider()
 
-    # 4. MEMORIA LARGA CON BOTÓN DE ACTUALIZACIÓN PROPIO
     st.text_area(
         "Memoria a Largo Plazo (Resumen):", 
         key="memoria_larga",
@@ -85,7 +83,6 @@ with st.sidebar:
 
     st.divider()
 
-    # 5. PERSONAJES CON BOTÓN DE ACTUALIZACIÓN PROPIO
     st.subheader("👥 Estado de Personajes")
     st.text_area(
         "Personajes Activos / Aliados / Enemigos:", 
@@ -120,11 +117,14 @@ with st.sidebar:
         st.session_state.mensajes = []
         st.rerun()
 
-# Mostrar el historial de chat en pantalla con botón de deshacer en el último turno
+# Mostrar el historial de chat con avatares personalizados para mayor inmersión
 total_mensajes = len(st.session_state.mensajes)
 
 for i, mensaje in enumerate(st.session_state.mensajes):
-    with st.chat_message(mensaje["role"]):
+    # Usamos avatares personalizados: ⚔️ para el usuario (protagonista) y 📜 para la IA (narrador)
+    avatar_icono = "⚔️" if mensaje["role"] == "user" else "📜"
+    
+    with st.chat_message(mensaje["role"], avatar=avatar_icono):
         st.markdown(mensaje["content"])
         
         # Botón discreto justo debajo del último mensaje
@@ -143,7 +143,7 @@ for i, mensaje in enumerate(st.session_state.mensajes):
 # Entrada de texto del usuario
 if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     st.session_state.mensajes.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="⚔️"):
         st.markdown(prompt)
 
     system_instruction = f"""
@@ -164,8 +164,8 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     for m in st.session_state.mensajes:
         mensajes_para_ia.append({"role": m["role"], "content": m["content"]})
 
-    with st.chat_message("assistant"):
-        with st.spinner("La IA está pensando en el mundo..."):
+    with st.chat_message("assistant", avatar="📜"):
+        with st.spinner("El narrador teje la historia..."):
             try:
                 response = client.chat.completions.create(
                     model="openrouter/free",
