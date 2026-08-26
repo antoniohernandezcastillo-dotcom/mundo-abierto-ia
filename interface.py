@@ -19,7 +19,7 @@ client = OpenAI(
     api_key=API_KEY,
 )
 
-# 1. INICIALIZAR VARIABLES DE ESTADO PRIMERO QUE NADA
+# 1. INICIALIZAR VARIABLES DE ESTADO Y RECUPERACIÓN AUTOMÁTICA
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = []
 
@@ -36,19 +36,19 @@ if "seccion_personajes" not in st.session_state:
 with st.sidebar:
     st.header("⚙️ Configuración del Mundo")
     
-    st.subheader("📂 Cargar o Reiniciar Partida")
+    st.subheader("📂 Gestión de Partida")
     
-    archivo_subido = st.file_uploader("Selecciona tu resguardo JSON", type=["json"])
+    archivo_subido = st.file_uploader("Cargar resguardo JSON anterior", type=["json"])
     
     if archivo_subido is not None:
-        if st.button("📂 Procesar y Cargar Partida"):
+        if st.button("📂 Cargar este Resguardo"):
             try:
                 partida_cargada = json.load(archivo_subido)
                 st.session_state.lore_mundo = partida_cargada.get("lore_mundo", st.session_state.lore_mundo)
                 st.session_state.memoria_larga = partida_cargada.get("memoria_larga", st.session_state.memoria_larga)
                 st.session_state.seccion_personajes = partida_cargada.get("seccion_personajes", st.session_state.seccion_personajes)
                 st.session_state.mensajes = partida_cargada.get("mensajes", [])
-                st.success("¡Resguardo cargado con éxito!")
+                st.success("¡Partida restaurada con éxito!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Error al leer el archivo: {e}")
@@ -63,27 +63,37 @@ with st.sidebar:
 
     st.divider()
     
+    # 3. SECCIÓN DE LORE CON BOTÓN DE ACTUALIZACIÓN PROPIO
     st.text_area(
         "Lore / Reglas del Mundo:", 
         key="lore_mundo",
         height=100
     )
-    
+    if st.button("🔄 Actualizar Lore del Mundo"):
+        st.success("¡Reglas del mundo guardadas para el siguiente turno!")
+
+    st.divider()
+
+    # 4. MEMORIA LARGA CON BOTÓN DE ACTUALIZACIÓN PROPIO
     st.text_area(
         "Memoria a Largo Plazo (Resumen):", 
         key="memoria_larga",
         height=100
     )
+    if st.button("🔄 Actualizar Memoria a Largo Plazo"):
+        st.success("¡Memoria a largo plazo sincronizada!")
 
+    st.divider()
+
+    # 5. PERSONAJES CON BOTÓN DE ACTUALIZACIÓN PROPIO
     st.subheader("👥 Estado de Personajes")
     st.text_area(
         "Personajes Activos / Aliados / Enemigos:", 
         key="seccion_personajes",
         height=120
     )
-    
-    if st.button("🔄 Actualizar Datos en la IA"):
-        st.success("¡Datos sincronizados para el próximo mensaje!")
+    if st.button("🔄 Actualizar Estado de Personajes"):
+        st.success("¡Personajes sincronizados!")
 
     st.divider()
     st.subheader("💾 Guardar Partida")
@@ -117,7 +127,7 @@ for i, mensaje in enumerate(st.session_state.mensajes):
     with st.chat_message(mensaje["role"]):
         st.markdown(mensaje["content"])
         
-        # Si es el último mensaje del historial, añadimos un botón discreto justo debajo
+        # Botón discreto justo debajo del último mensaje
         if i == total_mensajes - 1:
             if st.button("↩️ Deshacer este turno", key=f"btn_deshacer_{i}"):
                 if total_mensajes >= 2:
@@ -165,6 +175,6 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
                 respuesta_ia = response.choices[0].message.content
                 st.markdown(respuesta_ia)
                 st.session_state.mensajes.append({"role": "assistant", "content": respuesta_ia})
-                st.rerun() # Recargamos para que el botón de deshacer aparezca inmediatamente abajo
+                st.rerun()
             except Exception as e:
                 st.error(f"Ocurrió un error al conectar con la API: {e}")
