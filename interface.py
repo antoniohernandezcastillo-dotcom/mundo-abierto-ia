@@ -117,11 +117,10 @@ with st.sidebar:
         st.session_state.mensajes = []
         st.rerun()
 
-# Mostrar el historial de chat con avatares personalizados para mayor inmersión
+# Mostrar el historial de chat con avatares personalizados
 total_mensajes = len(st.session_state.mensajes)
 
 for i, mensaje in enumerate(st.session_state.mensajes):
-    # Usamos avatares personalizados: ⚔️ para el usuario (protagonista) y 📜 para la IA (narrador)
     avatar_icono = "⚔️" if mensaje["role"] == "user" else "📜"
     
     with st.chat_message(mensaje["role"], avatar=avatar_icono):
@@ -164,17 +163,32 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     for m in st.session_state.mensajes:
         mensajes_para_ia.append({"role": m["role"], "content": m["content"]})
 
+    # BLOQUE DE STREAMING (Escritura en tiempo real como en Janitor AI)
     with st.chat_message("assistant", avatar="📜"):
-        with st.spinner("El narrador teje la historia..."):
-            try:
-                response = client.chat.completions.create(
-                    model="openrouter/free",
-                    messages=mensajes_para_ia,
-                    temperature=0.8,
-                )
-                respuesta_ia = response.choices[0].message.content
-                st.markdown(respuesta_ia)
-                st.session_state.mensajes.append({"role": "assistant", "content": respuesta_ia})
-                st.rerun()
-            except Exception as e:
-                st.error(f"Ocurrió un error al conectar con la API: {e}")
+        container_respuesta = st.empty() # Contenedor dinámico que se irá rellenando
+        respuesta_completa = ""
+        
+        try:
+            # Activamos stream=True en la petición
+            stream = client.chat.completions.create(
+                model="openrouter/free",
+                messages=mensajes_para_ia,
+                temperature=0.8,
+                stream=True,
+            )
+            
+            # Recibimos los fragmentos de texto conforme la IA los va generando
+            for chunk in stream:
+                contenido_fragmento = chunk.choices[0].delta.content
+                if contenido_fragmento is not None:
+                    respuesta_completa += contenido_fragmento
+                    # Actualizamos el contenedor en tiempo real simulando el tipeo
+                    container_respuesta.markdown(respuesta_completa + "▌")
+            
+            # Al terminar, quitamos el cursor parpadeante y guardamos el mensaje definitivo
+            container_respuesta.markdown(respuesta_completa)
+            st.session_state.mensajes.append({"role": "assistant", "content": respuesta_completa})
+            st.rerun()
+            
+        except Exception as e:
+            st.error(f"Ocurrió un error al conectar con la API: {e}")
