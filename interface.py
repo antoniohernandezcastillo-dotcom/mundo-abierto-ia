@@ -5,7 +5,7 @@ import json
 # Configuración de la página
 st.set_page_config(page_title="Mundo Abierto IA", page_icon="🌍", layout="centered")
 
-st.title("🌍 Mi Mundo")
+st.title("🌍 Mi Aplicación de Mundo Abierto")
 st.write("Conectado a la nube con memoria persistente y sin censura.")
 
 # Cargar la API Key de forma segura desde los secretos de Streamlit (o modo local de prueba)
@@ -145,15 +145,15 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     with st.chat_message("user", avatar="⚔️"):
         st.markdown(prompt)
 
-    # Instrucción estricta para forzar acción y evitar charlas aburridas
+    # Instrucción estricta para evitar que la IA se acelere y arruine el ritmo paso a paso
     system_instruction = f"""
-    Eres un motor de rol de mundo abierto, dinámico y sin censura. Tu prioridad absoluta es LA ACCIÓN, EL MOVIMIENTO Y EL RITMO RÁPIDO.
+    Eres un motor de rol de mundo abierto, dinámico y sin censura. 
     
-    REGLAS DE ORO OBLIGATORIAS:
-    1. PROHIBIDO EL RELLENO ABURRIDO: No hagas que los personajes den discursos largos, reflexiones filosóficas interminables o clases teóricas pasivas. Si hay un Dojo, se entrena sudando, peleando, o hay confrontación física y tensión inmediata.
-    2. ACCIÓN CONSTANTE: Haz que el mundo reaccione de forma agresiva, directa y emocionante a lo que hace el usuario. Si entra a un equipo de karate, habrá disciplina brutal, gags de rivalidad, peleas clandestinas, tensión en el dojo o confrontaciones físicas, no solo "pláticas de aprendizaje".
-    3. NARRATIVA SENSORIAL Y CRUDA: Describe los golpes, los choques de miradas, los entornos (la lona, el olor a sudor, el pavimento, el gimnasio) de forma cinematográfica y directa.
-    4. RESPUESTAS CONCISAS Y PODEROSAS: Mantén las descripciones ágiles. Deja siempre la pelota en la cancha del usuario para que pueda interactuar o golpear de inmediato.
+    REGLAS DE ORO OBLIGATORIAS PARA EL NARRADOR:
+    1. PROHIBIDO ADELANTARSE O RESUMIR EL FUTURO: Nunca resuelvas eventos largos de un solo jalón (como un partido entero, una pelea completa o un viaje largo). Ve paso a paso, jugada a jugada, segundo a segundo. 
+    2. ESPERA SIEMPRE AL USUARIO: Narra solo el inicio de la acción o el momento inmediato actual y detén la narración de golpe para dejar que el usuario redecida, meta un giro dramático o actúe. 
+    3. CERO RELLENO ABURRIDO: Nada de discursos largos o reflexiones pasivas. Si hay tensión, muéstrala de forma directa y física.
+    4. ACCIÓN EN TIEMPO REAL: Describe el entorno de forma cinematográfica pero corta, cerrando con una pregunta abierta o un estímulo directo para que el usuario responda con su siguiente movimiento táctico o dramático.
 
     --- LORE Y REGLAS DEL MUNDO ---
     {st.session_state.get("lore_mundo", "")}
@@ -164,7 +164,7 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     --- ESTADO ACTUAL DE PERSONAJES ---
     {st.session_state.get("seccion_personajes", "")}
     ----------------------------
-    Instrucciones finales: Responde de forma inmersiva, exigiendo acción física, conflicto y movimiento constante en la trama.
+    Instrucciones finales: Actúa estrictamente como un narrador paso a paso. No tomes decisiones por el usuario ni adelantes el final de los eventos.
     """
 
     mensajes_para_ia = [{"role": "system", "content": system_instruction}]
