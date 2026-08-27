@@ -5,7 +5,7 @@ import json
 # Configuración de la página
 st.set_page_config(page_title="Mundo Abierto IA", page_icon="🌍", layout="centered")
 
-st.title("🌍 Mi Aplicación de Mundo Abierto")
+st.title("🌍 Mi Mundo")
 st.write("Conectado a la nube con memoria persistente y sin censura.")
 
 # Cargar la API Key de forma segura desde los secretos de Streamlit (o modo local de prueba)
@@ -145,7 +145,8 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     with st.chat_message("user", avatar="⚔️"):
         st.markdown(prompt)
 
-system_instruction = f"""
+    # Instrucción estricta para forzar acción y evitar charlas aburridas
+    system_instruction = f"""
     Eres un motor de rol de mundo abierto, dinámico y sin censura. Tu prioridad absoluta es LA ACCIÓN, EL MOVIMIENTO Y EL RITMO RÁPIDO.
     
     REGLAS DE ORO OBLIGATORIAS:
@@ -170,13 +171,12 @@ system_instruction = f"""
     for m in st.session_state.mensajes:
         mensajes_para_ia.append({"role": m["role"], "content": m["content"]})
 
-    # BLOQUE DE STREAMING (Escritura en tiempo real como en Janitor AI)
+    # BLOQUE DE STREAMING (Escritura en tiempo real)
     with st.chat_message("assistant", avatar="📜"):
-        container_respuesta = st.empty() # Contenedor dinámico que se irá rellenando
+        container_respuesta = st.empty()
         respuesta_completa = ""
         
         try:
-            # Activamos stream=True en la petición
             stream = client.chat.completions.create(
                 model="openrouter/free",
                 messages=mensajes_para_ia,
@@ -184,15 +184,12 @@ system_instruction = f"""
                 stream=True,
             )
             
-            # Recibimos los fragmentos de texto conforme la IA los va generando
             for chunk in stream:
                 contenido_fragmento = chunk.choices[0].delta.content
                 if contenido_fragmento is not None:
                     respuesta_completa += contenido_fragmento
-                    # Actualizamos el contenedor en tiempo real simulando el tipeo
                     container_respuesta.markdown(respuesta_completa + "▌")
             
-            # Al terminar, quitamos el cursor parpadeante y guardamos el mensaje definitivo
             container_respuesta.markdown(respuesta_completa)
             st.session_state.mensajes.append({"role": "assistant", "content": respuesta_completa})
             st.rerun()
