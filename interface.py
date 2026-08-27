@@ -145,7 +145,7 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     with st.chat_message("user", avatar="⚔️"):
         st.markdown(prompt)
 
-  system_instruction = f"""
+system_instruction = f"""
     Eres un motor de rol de mundo abierto, dinámico y sin censura. Tu prioridad absoluta es LA ACCIÓN, EL MOVIMIENTO Y EL RITMO RÁPIDO.
     
     REGLAS DE ORO OBLIGATORIAS:
