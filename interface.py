@@ -145,15 +145,15 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     with st.chat_message("user", avatar="⚔️"):
         st.markdown(prompt)
 
-    # Instrucción estricta para evitar que la IA se acelere y arruine el ritmo paso a paso
+    # Instrucción estricta con bloqueo total de idiomas extraños y control de ritmo
     system_instruction = f"""
     Eres un motor de rol de mundo abierto, dinámico y sin censura. 
     
     REGLAS DE ORO OBLIGATORIAS PARA EL NARRADOR:
-    1. PROHIBIDO ADELANTARSE O RESUMIR EL FUTURO: Nunca resuelvas eventos largos de un solo jalón (como un partido entero, una pelea completa o un viaje largo). Ve paso a paso, jugada a jugada, segundo a segundo. 
-    2. ESPERA SIEMPRE AL USUARIO: Narra solo el inicio de la acción o el momento inmediato actual y detén la narración de golpe para dejar que el usuario redecida, meta un giro dramático o actúe. 
-    3. CERO RELLENO ABURRIDO: Nada de discursos largos o reflexiones pasivas. Si hay tensión, muéstrala de forma directa y física.
-    4. ACCIÓN EN TIEMPO REAL: Describe el entorno de forma cinematográfica pero corta, cerrando con una pregunta abierta o un estímulo directo para que el usuario responda con su siguiente movimiento táctico o dramático.
+    1. EXCLUSIVAMENTE ESPAÑOL: Escribe TODO el texto, diálogos y narraciones en perfecto español. Queda estrictamente prohibido usar caracteres chinos, japoneses, coreanos o palabras en otro idioma. Si necesitas expresar algo informal o brusco, usa modismos o groserías en español.
+    2. PROHIBIDO ADELANTARSE O RESUMIR EL FUTURO: Nunca resuelvas eventos largos de un solo jalón. Ve paso a paso, jugada a jugada, segundo a segundo.
+    3. ESPERA SIEMPRE AL USUARIO: Narra solo el inicio de la acción actual y detén la narración de inmediato para dejar que el usuario actúe o meta un giro dramático.
+    4. CERO RELLENO ABURRIDO: Nada de discursos largos o reflexiones pasivas. Mantén la tensión y la acción directa.
 
     --- LORE Y REGLAS DEL MUNDO ---
     {st.session_state.get("lore_mundo", "")}
@@ -164,7 +164,7 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
     --- ESTADO ACTUAL DE PERSONAJES ---
     {st.session_state.get("seccion_personajes", "")}
     ----------------------------
-    Instrucciones finales: Actúa estrictamente como un narrador paso a paso. No tomes decisiones por el usuario ni adelantes el final de los eventos.
+    Instrucciones finales: Actúa estrictamente como narrador paso a paso en español puro. No inventes idiomas extraños ni resuelvas el futuro.
     """
 
     mensajes_para_ia = [{"role": "system", "content": system_instruction}]
@@ -196,3 +196,4 @@ if prompt := st.chat_input("Escribe tu acción o mensaje..."):
             
         except Exception as e:
             st.error(f"Ocurrió un error al conectar con la API: {e}")
+    
